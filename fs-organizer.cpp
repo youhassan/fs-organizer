@@ -6,6 +6,28 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+fs::path uniquePath(const fs::path& destPath)
+{
+    if(!fs::exists(destPath))
+    {
+        return destPath;
+    }
+    fs::path parent = destPath.parent_path();
+    auto stem = destPath.stem().string();
+    auto ext = destPath.extension().string();
+
+    int counter = 1;
+    fs::path newPath;
+
+    do
+    {
+        newPath = parent / (stem + "(" + to_string(counter) + ")" + ext);
+        counter++;
+    } while (fs::exists(newPath));
+    
+    return newPath;
+}
+
 int main()
 {
     string folderPath;
@@ -50,31 +72,35 @@ int main()
         {
             fs::create_directories(folderPath + "/Images");
             fileDest = folderPath + "/Images/" + fileName;
-            fs::rename(filePath, fileDest);
-
+            fs::path finalDest = uniquePath(fileDest);
+            fs::rename(filePath, finalDest);
         }else if (videoExtensions.count(ext))
         {
             fs::create_directories(folderPath + "/Videos");
             fileDest = folderPath + "/Videos/" + fileName;
-            fs::rename(filePath, fileDest);
+            fs::path finalDest = uniquePath(fileDest);
+            fs::rename(filePath, finalDest);
 
         }else if (documentExtensions.count(ext))
         {
             fs::create_directories(folderPath + "/Documents");
             fileDest = folderPath + "/Documents/" + fileName;
-            fs::rename(filePath, fileDest);
+            fs::path finalDest = uniquePath(fileDest);
+            fs::rename(filePath, finalDest);
 
         }else if (archiveExtensions.count(ext))
         {
             fs::create_directories(folderPath + "/Archives");
             fileDest = folderPath + "/Archives/" + fileName;
-            fs::rename(filePath, fileDest);
+            fs::path finalDest = uniquePath(fileDest);
+            fs::rename(filePath, finalDest);
 
         }else if (musicExtensions.count(ext))
         {
             fs::create_directories(folderPath + "/Music");
             fileDest = folderPath + "/Music/" + fileName;
-            fs::rename(filePath, fileDest);
+            fs::path finalDest = uniquePath(fileDest);
+            fs::rename(filePath, finalDest);
         }
     }
     cout << "Folder Cleaning Completed!" << endl;
