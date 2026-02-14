@@ -1,5 +1,8 @@
 #include <iostream>
 #include <filesystem>
+#include <fstream>
+#include <unordered_map>
+#include <vector>
 #include <string>
 #include <unordered_set>
 #include <algorithm>
@@ -28,9 +31,28 @@ fs::path uniquePath(const fs::path& destPath)
     return newPath;
 }
 
+unsigned long long hashing(const fs::path& filePath)
+{
+    ifstream file(filePath, ios::binary);
+
+    if (!file)
+    {return 0;}
+
+    unsigned long long hash = 0;
+    char byte;
+
+    while (file.read(&byte, 1))
+    {
+        hash += (unsigned char)byte;
+    }
+
+    return hash;
+}
+
 int main()
 {
     string folderPath;
+    unsigned long long totalSaved = 0;
     
     unordered_set <string> imageExtensions = 
     {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff", ".webp"};
@@ -56,12 +78,60 @@ int main()
             cout << "Invalid Folder Path, Try Again!" << endl;
         }
     }
+
+    unordered_map <uintmax_t, vector<fs::path>> filesBySize;
     for (const auto& entry : fs::recursive_directory_iterator(folderPath))
     {
         if (!fs::is_regular_file(entry))
         {
             continue;
         }
+
+        uintmax_t size = fs::file_size(entry);
+        filesBySize[size].push_back(entry.path());
+    }
+
+    for (const auto& [size, files] : filesBySize)
+    {
+        if (files.size() < 2)
+        continue;
+
+        unordered_map <unsigned long long, vector<fs::path>> filesByHash;
+
+        for (auto& file : files)
+        {
+            unsigned long long h = hashing(file);
+            filesByHash[h].push_back(file);
+        }
+
+        for (auto& [h, dupFiles] : filesByHash)
+        {
+            if (dupFiles.size() > 1)
+            {
+                cout << "Duplicate Group (Size: " << size << " Bytes):" << endl;
+                for (size_t i = 0; i < dupFiles.size(); i++)
+                {
+                    cout << "  [" << i+1 << "] " << dupFiles[i] << endl;
+                }
+                for (size_t i = 1; i < dupFiles.size(); i++)
+                {
+                    cout << "Delete " << dupFiles[i] << " ? (y/n): ";
+                    char answer;
+                    cin >> answer;
+                    if (answer == 'y' || answer == 'Y')
+                    {
+                        uintmax_t fileSize = fs::file_size(dupFiles[i]);
+                        fs::remove(dupFiles[i]);
+                        totalSaved += fileSize;
+                        cout << "Deleted!" << endl;
+                    }
+                }
+            }
+        }
+    }
+
+    for (const auto& entry : fs::recursive_directory_iterator(folderPath))
+    {
         auto ext = entry.path().extension().string();
         transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
         auto fileName = entry.path().filename().string();
@@ -103,6 +173,8 @@ int main()
             fs::rename(filePath, finalDest);
         }
     }
-    cout << "Folder Cleaning Completed!" << endl;
+
+    cout << "\nDone! Folder Cleaning Completed!" << endl;
+    cout << "Total Space Saved: " << totalSaved / (1024*1024) << " MB" << endl;
     return 0;
 }
