@@ -176,5 +176,9 @@ int main()
 
     cout << "\nDone! Folder Cleaning Completed!" << endl;
     cout << "Total Space Saved: " << totalSaved / (1024*1024) << " MB" << endl;
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "Press Enter To Exit.";
+    cin.get();
     return 0;
 }
