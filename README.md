@@ -4,6 +4,8 @@ A high-performance **Folder Organizer and Duplicate File Cleaner** built using *
 
 The tool scans a selected folder, safely detects duplicate files, asks for user confirmation before deletion, and then organizes files into categorized folders such as **Images**, **Videos**, **Documents**, **Music**, and **Archives**.
 
+> A ready-to-use Windows executable is available in the **Releases** section.
+
 ---
 
 ## Features
