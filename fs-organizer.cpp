@@ -49,9 +49,13 @@ unsigned long long hashing(const fs::path& filePath)
     return hash;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-    string folderPath;
+    setvbuf(stdout, NULL, _IONBF, 0);
+    if (argc != 2)
+    return 1;
+
+    string folderPath = argv[1];
     unsigned long long totalSaved = 0;
     
     unordered_set <string> imageExtensions = 
@@ -65,19 +69,19 @@ int main()
     unordered_set<string> archiveExtensions =
     {".zip", ".rar", ".7z", ".tar", ".gz"};
 
-    while (true)
-    {
-        cout << "Enter A Folder Path: ";
-        getline (cin, folderPath);
+    // while (true)
+    // {
+    //     cout << "Enter A Folder Path: ";
+    //     getline (cin, folderPath);
 
-        if (fs::exists(folderPath) && fs::is_directory(folderPath))
-        {
-            break;
-        }else
-        {
-            cout << "Invalid Folder Path, Try Again!" << endl;
-        }
-    }
+    //     if (fs::exists(folderPath) && fs::is_directory(folderPath))
+    //     {
+    //         break;
+    //     }else
+    //     {
+    //         cout << "Invalid Folder Path, Try Again!" << endl;
+    //     }
+    // }
 
     unordered_map <uintmax_t, vector<fs::path>> filesBySize;
     for (const auto& entry : fs::recursive_directory_iterator(folderPath))
@@ -107,24 +111,19 @@ int main()
         for (auto& [h, dupFiles] : filesByHash)
         {
             if (dupFiles.size() > 1)
-            {
-                cout << "Duplicate Group (Size: " << size << " Bytes):" << endl;
-                for (size_t i = 0; i < dupFiles.size(); i++)
-                {
-                    cout << "  [" << i+1 << "] " << dupFiles[i] << endl;
-                }
+            {                
                 for (size_t i = 1; i < dupFiles.size(); i++)
                 {
-                    cout << "Delete " << dupFiles[i] << " ? (y/n): ";
+                    cout << "Confirm Delete:" << dupFiles[i].string() << endl;
+                    
                     char answer;
                     cin >> answer;
-                    if (answer == 'y' || answer == 'Y')
-                    {
+                    
+                    if (answer == 'y' || answer == 'Y') {
                         uintmax_t fileSize = fs::file_size(dupFiles[i]);
                         fs::remove(dupFiles[i]);
                         totalSaved += fileSize;
-                        cout << "Deleted!" << endl;
-                    }
+                    } 
                 }
             }
         }
@@ -177,8 +176,5 @@ int main()
     cout << "\nDone! Folder Cleaning Completed!" << endl;
     cout << "Total Space Saved: " << totalSaved / (1024*1024) << " MB" << endl;
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Press Enter To Exit.";
-    cin.get();
     return 0;
 }
